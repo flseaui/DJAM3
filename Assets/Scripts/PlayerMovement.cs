@@ -10,7 +10,9 @@ public class PlayerMovement : MonoBehaviour
     private UserInput _input;
     
     private Rigidbody2D _rb;
-
+    private Animator _animator;
+    private SpriteRenderer _renderer;
+    
     [SerializeField] private float _initialGravity;
     [SerializeField] private float _initialTerminalVel;
     [SerializeField] private float _acceleration;
@@ -35,10 +37,14 @@ public class PlayerMovement : MonoBehaviour
     private float _gravity;
     [ReadOnly, ShowInInspector]
     private float _terminalVel;
-    
+
+    private static readonly int Walking = Animator.StringToHash("walking");
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
+        _renderer = GetComponent<SpriteRenderer>();
         _gravity = _initialGravity;
         _terminalVel = _initialTerminalVel;
     }
@@ -106,6 +112,8 @@ public class PlayerMovement : MonoBehaviour
         if (_noRight)
             _canRight = true;
         
+        _animator.SetBool(Walking, false);
+        
         if (_wallJumping && _canLeft && _input.Inputs[MoveLeft]
             || !_wallJumping && _input.Inputs[MoveLeft])
         {
@@ -113,6 +121,9 @@ public class PlayerMovement : MonoBehaviour
             _wallJumping = false;
             _direction = false;
             _velocity.x = Mathf.Clamp(_velocity.x + _acceleration * Time.deltaTime, -_maxSpeed * Time.deltaTime, _maxSpeed * Time.deltaTime);
+            
+            if (_grounded) 
+                _animator.SetBool(Walking, true);
         }
 
         if (_wallJumping && _canRight && _input.Inputs[MoveRight]
@@ -122,8 +133,18 @@ public class PlayerMovement : MonoBehaviour
             _wallJumping = false;
             _direction = true;
             _velocity.x = Mathf.Clamp(_velocity.x + _acceleration * Time.deltaTime, -_maxSpeed * Time.deltaTime, _maxSpeed * Time.deltaTime);
+            
+            if (_grounded) 
+                _animator.SetBool(Walking, true);
         }
 
+        if (_wallJumping)
+        {
+            var holdingOut = _direction ? _input.Inputs[MoveRight] : _input.Inputs[MoveLeft];
+            if (holdingOut) 
+                _velocity.x =_wallJumpHorizontal * Time.deltaTime;
+        }
+        
         if (_queueJump)
         {
             _queueJump = false;    
@@ -132,7 +153,8 @@ public class PlayerMovement : MonoBehaviour
                 if (_wallSliding)
                 {
                     _terminalVel = _initialTerminalVel;
-                    _velocity.x = _wallJumpHorizontal * Time.deltaTime;
+                    var holdingIn = _direction ? _input.Inputs[MoveRight] : _input.Inputs[MoveLeft];
+                    _velocity.x = (holdingIn ? _wallJumpHorizontal / 2 : _wallJumpHorizontal) * Time.deltaTime;
                     _velocity.y = _wallJumpForce * Time.deltaTime;
                     _direction = !_direction;
                     _wallJumping = true;
@@ -154,7 +176,17 @@ public class PlayerMovement : MonoBehaviour
         if (_velocity.y < -_terminalVel) _velocity.y = -_terminalVel;
         if (_velocity.y > _terminalVel) _velocity.y = _terminalVel;
         
-        var dirVel = _direction ? _velocity.x : -_velocity.x;
+        float dirVel;
+        if (_direction)
+        {
+            dirVel = _velocity.x;
+            _renderer.flipX = false;
+        }
+        else
+        {
+            dirVel = -_velocity.x;
+            _renderer.flipX = true;
+        }
 
         _rb.MovePosition(transform.position + new Vector3(dirVel, _velocity.y) * Time.deltaTime);
     }
