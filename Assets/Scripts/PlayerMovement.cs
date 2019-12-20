@@ -17,6 +17,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _deceleration;
     [SerializeField] private float _maxSpeed;
     [SerializeField] private float _jumpForce;
+    [SerializeField] private float _wallJumpForce;
     [SerializeField] private float _wallJumpHorizontal;
 
     [ReadOnly, ShowInInspector]
@@ -26,6 +27,9 @@ public class PlayerMovement : MonoBehaviour
     private bool _grounded;
     private bool _wallSliding;
     private bool _direction; // true = right, false = left
+    private bool _noLeft, _noRight;
+    private bool _canLeft, _canRight;
+    private bool _wallJumping;
 
     [ReadOnly, ShowInInspector]
     private float _gravity;
@@ -63,8 +67,11 @@ public class PlayerMovement : MonoBehaviour
 
             if (_velocity.y < 0)
             {
-                var sideRay = Physics2D.Raycast(_rb.position, _direction ? Vector2.right : Vector2.left, .6f);
-                if (sideRay.collider && (_direction ? _input.Inputs[MoveRight] : _input.Inputs[MoveLeft]))
+                var centerSideRay = Physics2D.Raycast(_rb.position, _direction ? Vector2.right : Vector2.left, .6f);
+                var topSideRay = Physics2D.Raycast(_rb.position + new Vector2(0, .48f), _direction ? Vector2.right : Vector2.left, .6f);
+                var bottomSideRay = Physics2D.Raycast(_rb.position + new Vector2(0, -.48f), _direction ? Vector2.right : Vector2.left, .6f);
+                
+                if ((centerSideRay.collider || topSideRay.collider || bottomSideRay.collider) && (_direction ? _input.Inputs[MoveRight] : _input.Inputs[MoveLeft]))
                 {
                     _terminalVel = _initialTerminalVel / 8;
                     _wallSliding = true;
@@ -88,17 +95,33 @@ public class PlayerMovement : MonoBehaviour
                 _velocity.y += (_velocity.y - _gravity) * Time.deltaTime;
             }
         }
-        
-        if (_input.Inputs[MoveLeft])
+        else
         {
-            _direction = false;
-            _velocity.x = Mathf.Clamp(_acceleration, -_maxSpeed, _maxSpeed) * Time.deltaTime;
+            _wallJumping = false;
+            _velocity.y = -_gravity * Time.deltaTime / 2;
         }
 
-        if (_input.Inputs[MoveRight])
+        if (_noLeft)
+            _canLeft = true;
+        if (_noRight)
+            _canRight = true;
+        
+        if (_wallJumping && _canLeft && _input.Inputs[MoveLeft]
+            || !_wallJumping && _input.Inputs[MoveLeft])
         {
+            _noLeft = false;
+            _wallJumping = false;
+            _direction = false;
+            _velocity.x = Mathf.Clamp(_velocity.x + _acceleration * Time.deltaTime, -_maxSpeed * Time.deltaTime, _maxSpeed * Time.deltaTime);
+        }
+
+        if (_wallJumping && _canRight && _input.Inputs[MoveRight]
+            || !_wallJumping && _input.Inputs[MoveRight])
+        {
+            _noRight = false;
+            _wallJumping = false;
             _direction = true;
-            _velocity.x = Mathf.Clamp(_acceleration, -_maxSpeed, _maxSpeed) * Time.deltaTime;
+            _velocity.x = Mathf.Clamp(_velocity.x + _acceleration * Time.deltaTime, -_maxSpeed * Time.deltaTime, _maxSpeed * Time.deltaTime);
         }
 
         if (_queueJump)
@@ -110,16 +133,24 @@ public class PlayerMovement : MonoBehaviour
                 {
                     _terminalVel = _initialTerminalVel;
                     _velocity.x = _wallJumpHorizontal * Time.deltaTime;
+                    _velocity.y = _wallJumpForce * Time.deltaTime;
                     _direction = !_direction;
+                    _wallJumping = true;
                 }
-                _velocity.y = _jumpForce * Time.deltaTime;
+                else
+                {
+                    _velocity.y = _jumpForce * Time.deltaTime;
+                }
             }
         }
         
         //deceleration
-        if (_velocity.x != 0)
-            _velocity.x = Mathf.Max(_velocity.x - _deceleration * Time.deltaTime, 0);
-        
+        if (!_wallJumping)
+        {
+            if (_velocity.x != 0)
+                _velocity.x = Mathf.Max(_velocity.x - _deceleration * Time.deltaTime, 0);
+        }
+
         if (_velocity.y < -_terminalVel) _velocity.y = -_terminalVel;
         if (_velocity.y > _terminalVel) _velocity.y = _terminalVel;
         
@@ -143,6 +174,8 @@ public class PlayerMovement : MonoBehaviour
             Debug.DrawRay(_rb.position + new Vector2(.48f, 0), Vector2.up);
 
             Debug.DrawRay(_rb.position, _direction ? Vector2.right : Vector2.left);
+            Debug.DrawRay(_rb.position + new Vector2(0, .48f), _direction ? Vector2.right : Vector2.left);
+            Debug.DrawRay(_rb.position + new Vector2(0, -.48f), _direction ? Vector2.right : Vector2.left);
         }
     }
 }
