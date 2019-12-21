@@ -3,7 +3,6 @@ using UnityEngine.Tilemaps;
 
 public class Placer : MonoBehaviour
 {
-
     [SerializeField] private ObjectPalette _objectPalette;
     
     [SerializeField]
@@ -30,8 +29,7 @@ public class Placer : MonoBehaviour
         if (_tilemap.GetTile<Tile>(tilePos) == null) return;
         
         tilePos.z = 1;
-        
-        
+
         if (Input.GetMouseButton(0))
         {
             _tilemap.SetTile(tilePos, _objectPalette.SelectedObject);
@@ -42,21 +40,15 @@ public class Placer : MonoBehaviour
         else
         {
             if (tilePos == _placedOn)
-            {
                 return;
-            }
-            else
-            {
-                
-                _placedOn = new Vector3Int(1000, 1000, 1000);
-                
-                _tilemap.SetTile(_selectorPos, _prevTile);
-                _prevTile = _tilemap.GetTile<Tile>(tilePos);
-                _tilemap.SetTile(tilePos, _selectorTile);
-                _selectorPos = tilePos;
-            }
-            
-        }
 
+            _placedOn = new Vector3Int(1000, 1000, 1000);
+                
+            _tilemap.SetTile(_selectorPos, _prevTile);
+            _prevTile = _tilemap.GetTile<Tile>(tilePos);
+            _tilemap.SetTile(tilePos, _selectorTile);
+            _selectorPos = tilePos;
+
+        }
     }
 }
