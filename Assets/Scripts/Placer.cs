@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.U2D;
 
 public class Placer : MonoBehaviour
 {
@@ -16,15 +17,17 @@ public class Placer : MonoBehaviour
     private Vector3Int _selectorPos;
 
     private Vector3Int _placedOn;
+
+    private void Awake()
+    {
+        _selectorPos = new Vector3Int(1000, 1000, 1000);
+    }
     
     void Update()
     {
         var worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        var tilePos =  _tilemap.LocalToCell(worldPos);
-
-        tilePos.z = 0;
-        tilePos.x -= 7;
-        tilePos.y -= 5;
+        worldPos.z = 0;
+        var tilePos =  _tilemap.WorldToCell(worldPos);
         
         if (_tilemap.GetTile<Tile>(tilePos) == null) return;
         

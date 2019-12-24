@@ -22,11 +22,8 @@ public class TimeManager : MonoBehaviour
 
         _time.Value--;
 
-        Debug.Log(_time.Value);
-        
         if (_time.Value == 0)
         {
-            Debug.Log("OH YEAH YEAH");
             NextYear?.Invoke();
             _time.Value = _time.InitialTime;
         }
