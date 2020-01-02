@@ -37,10 +37,14 @@ public class WorldExpander : MonoBehaviour
         BottomLeft,
         BottomRight
     }
+
+    private void Start()
+    {
+        _tilemap.RefreshAllTiles();
+    }
     
     private void ExpandWorld(WorldSide side)
     {
-        
         _tilemap.CompressBounds();
 
         var bounds = _tilemap.cellBounds;
@@ -54,7 +58,8 @@ public class WorldExpander : MonoBehaviour
                 for (var i = bounds.xMin; i < bounds.xMax; i++)
                 {
                     edge.x = i;
-                    _tilemap.SetTile(edge, _groundTile);   
+                    _tilemap.SetTile(edge, _groundTile);
+                    _tilemap.RefreshTile(edge);
                 }
                 break;
             case TopRight:
@@ -64,6 +69,7 @@ public class WorldExpander : MonoBehaviour
                 {
                     edge.y = i;
                     _tilemap.SetTile(edge, _groundTile);   
+                    _tilemap.RefreshTile(edge);
                 }
                 break;
             case BottomLeft:
@@ -73,6 +79,7 @@ public class WorldExpander : MonoBehaviour
                 {
                     edge.y = i;
                     _tilemap.SetTile(edge, _groundTile);   
+                    _tilemap.RefreshTile(edge);
                 }
                 break;
             case BottomRight:
@@ -81,7 +88,8 @@ public class WorldExpander : MonoBehaviour
                 for (var i = bounds.xMin; i < bounds.xMax; i++)
                 {
                     edge.x = i;
-                    _tilemap.SetTile(edge, _groundTile);   
+                    _tilemap.SetTile(edge, _groundTile);  
+                    _tilemap.RefreshTile(edge);
                 }
                 break;
             default:
