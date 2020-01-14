@@ -18,6 +18,8 @@ public class Placer : MonoBehaviour
 
     private Vector3Int _placedOn;
 
+    private bool _justPlaced;
+    
     private void Awake()
     {
         _selectorPos = new Vector3Int(1000, 1000, 1000);
@@ -25,6 +27,11 @@ public class Placer : MonoBehaviour
     
     void Update()
     {
+        if (_justPlaced)
+        {
+            _justPlaced = false;
+        }
+        
         var worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         worldPos.z = 0;
         var tilePos =  _tilemap.WorldToCell(worldPos);
@@ -35,7 +42,8 @@ public class Placer : MonoBehaviour
 
         if (Input.GetMouseButton(0))
         {
-            _tilemap.SetTile(tilePos, _objectPalette.SelectedObject);
+            TileManager.Instance.PlaceTile(_placedOn, _objectPalette.SelectedObject);
+            _justPlaced = true;
             _placedOn = tilePos;
             _prevTile = null;
             _selectorPos = new Vector3Int(1000, 1000, 1000);
