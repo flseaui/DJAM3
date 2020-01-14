@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Ludiq.PeekCore.TinyJson;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -18,39 +19,31 @@ public class TileManager : Singleton<TileManager>
     {
         _activeTiles = new List<Vector3Int>();
         
-        InvokeRepeating(nameof(RefreshTiles), 2, 1);
+        InvokeRepeating(nameof(RefreshTiles), 0, .1f);
     }
 
-    public void PlaceTile(Vector3Int tilePos, Tile tile)
+    public void PlaceTile(Vector3Int tilePos, Tile tile, LitTile oldTile)
     {
-        var oldTile = _tilemap.GetTile<LitTile>(tilePos);
-        if (oldTile != null)
-        {
-            Debug.Log("WOO YEAH WOO");
-            Debug.Log(oldTile);
-            Debug.Log(tilePos);
+        _tilemap.SetTile(tilePos, tile);    
+        if (oldTile != null && tile != oldTile)
             _tilemap.GetTile<LitTile>(tilePos).OnTileRemoved(tilePos, oldTile, _tilemap);
-        }
-        
-        _tilemap.SetTile(tilePos, tile);
-
-
     }
     
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log(_activeTiles.Count);
-            _tilemap.RefreshTile(_activeTiles[0]);
+            _tilemap.RefreshAllTiles();
         }
     }
     
     private void RefreshTiles()
     {
-        for (var i = 0; i < _activeTiles.Count - 1; i++)
+        for (var i = 0; i < _activeTiles.Count; i++)
         {
+            // _tilemap.GetTile<LitTile>(_activeTiles[i]).RefreshTile(_activeTiles[i], null);
             _tilemap.RefreshTile(_activeTiles[i]);
+           //_tilemap.SetTile(_activeTiles[i], _tilemap.GetTile<LitTile>(_activeTiles[i]));
         }
     }
 }

@@ -17,6 +17,8 @@ public class LitTile : Tile
 	public int Radius;
 	public int Intensity;
 
+	[SerializeField] private Sprite _sprite;
+	
 	[NonSerialized]
 	public float Brightness;
 
@@ -32,7 +34,7 @@ public class LitTile : Tile
 				TileManager.Instance.RegisterActiveTile(position);
 			}
 		}
-		
+
 		return base.StartUp(position, tilemap, go);
 	}
 
@@ -43,8 +45,6 @@ public class LitTile : Tile
 		
 		if (radius <= 0 || intensity <= 0) return;
 
-		Debug.Log("GAMING");
-		
 		for (var x = -radius; x <= radius; x++)
 		{
 			for (var y = -radius; y <= radius; y++)
@@ -58,8 +58,6 @@ public class LitTile : Tile
 				var tile = tilemap.GetTile<LitTile>(pos);
 				if (tile != null)
 				{
-					var brightness = Mathf.Clamp(1 - (float) (rad / radius), .2f, 1);
-					
 					if (BrightHolder.BrightDict.ContainsKey(pos))
 					{
 						BrightHolder.BrightDict.Remove(pos);
@@ -71,10 +69,12 @@ public class LitTile : Tile
 		}
 	}
 	
-	public override void RefreshTile(Vector3Int position, ITilemap tilemap)
+	public new void RefreshTile(Vector3Int position, ITilemap tilemap)
 	{
-		base.RefreshTile(position, tilemap);
-		
+		Debug.Log("REFRESHIN " + position);
+
+		//base.RefreshTile(position, tilemap);
+
 		if (Radius <= 0 || Intensity <= 0) return;
 		
 		for (var x = -Radius; x <= Radius; x++)
@@ -110,9 +110,13 @@ public class LitTile : Tile
 
 	public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
 	{
+		base.GetTileData(position, tilemap, ref tileData);
+
 		tileData.flags = TileFlags.None;
 		tileData.sprite = sprite;
 		tileData.transform = transform;
+		//tileData.colliderType = Tile.ColliderType.Sprite;
+		
 		if (Application.isPlaying)
 		{
 			float bright;
@@ -131,6 +135,8 @@ public class LitTile : Tile
 
 			tilemap.GetComponent<Tilemap>()
 				.SetColor(position, Color.HSVToRGB(0, 0, bright));
+			
+			RefreshTile(position, tilemap);
 		}
 		else
 			tileData.color = Color.white;

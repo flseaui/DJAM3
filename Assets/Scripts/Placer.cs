@@ -9,7 +9,7 @@ public class Placer : MonoBehaviour
     [SerializeField]
     private Tilemap _tilemap;
 
-    private Tile _prevTile;
+    private LitTile _prevTile;
 
     [SerializeField]
     private Tile _selectorTile;
@@ -42,7 +42,9 @@ public class Placer : MonoBehaviour
 
         if (Input.GetMouseButton(0))
         {
-            TileManager.Instance.PlaceTile(_placedOn, _objectPalette.SelectedObject);
+            if (tilePos == _placedOn)
+                return;
+            TileManager.Instance.PlaceTile(tilePos, _objectPalette.SelectedObject, _prevTile);
             _justPlaced = true;
             _placedOn = tilePos;
             _prevTile = null;
@@ -56,7 +58,7 @@ public class Placer : MonoBehaviour
             _placedOn = new Vector3Int(1000, 1000, 1000);
                 
             _tilemap.SetTile(_selectorPos, _prevTile);
-            _prevTile = _tilemap.GetTile<Tile>(tilePos);
+            _prevTile = _tilemap.GetTile<LitTile>(tilePos);
             _tilemap.SetTile(tilePos, _selectorTile);
             _selectorPos = tilePos;
 
